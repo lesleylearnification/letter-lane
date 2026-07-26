@@ -1,0 +1,3 @@
+Replace index.html and game.js in the root of your GitHub repository.
+The Letter Lane Explorer badge is now embedded directly in both files.
+Commit the replacements, wait for GitHub Pages to redeploy, then press Ctrl+F5.
