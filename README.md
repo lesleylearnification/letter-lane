@@ -1,33 +1,49 @@
 # Letter Lane
 
-A cozy early-reading HTML5 game for children ages 4–7.
+A cozy, storybook-style early literacy game for beginning readers.
 
-Players follow one of two letter lanes from left to right and choose the word that matches the picture. The game includes 10 CVC-word rounds, encouraging corrective feedback, visible progress, audio support, keyboard access, reduced-motion support, and a collectible end-of-level badge stored in the browser.
+Players help 10 friendly neighborhood nouns find their names by following the correct three-letter path from left to right.
 
 ## Play locally
 
 Open `index.html` in a modern browser.
 
-## Publish on GitHub Pages
+## Publish with GitHub Pages
 
-1. Create a new GitHub repository.
-2. Upload `index.html`, `style.css`, `game.js`, and `README.md` to the repository root.
-3. Open **Settings → Pages**.
-4. Under **Build and deployment**, choose **Deploy from a branch**.
-5. Choose the `main` branch and `/root`, then save.
-6. GitHub will display the public game URL after deployment.
+1. Create a new public GitHub repository.
+2. Upload **all files and folders inside this project** to the repository root.
+3. Commit the upload to the `main` branch.
+4. Open **Settings → Pages**.
+5. Under **Build and deployment**, choose:
+   - Source: **Deploy from a branch**
+   - Branch: **main**
+   - Folder: **/ (root)**
+6. Click **Save**.
+7. Wait for the Pages deployment to finish, then open the published URL.
 
-## Accessibility features
+The URL normally follows this pattern:
 
-- Strong text and component contrast
-- Large touch targets
-- Keyboard-operable letter buttons
-- Visible focus indicators
+`https://YOUR-USERNAME.github.io/YOUR-REPOSITORY-NAME/`
+
+## Included
+
+- 10 picture-word rounds
+- Randomized correct-lane placement
+- Left-to-right letter selection
+- Friendly spoken and written feedback
+- 10-step progress trail
+- Level-complete modal with a close button
+- Collectible Letter Lane Explorer badge
+- Backpack inventory stored in the browser
+- Keyboard support
+- Visible focus states
 - Screen-reader labels and live feedback
-- Optional spoken prompts using browser speech synthesis
-- Feedback that does not depend on color alone
 - Reduced-motion support
+- Responsive desktop and mobile layouts
 
-## Learning design
+## Project files
 
-The game targets early decoding and orthographic discrimination through highly imageable CVC words and distractors that differ by one letter.
+- `index.html`
+- `style.css`
+- `game.js`
+- `assets/images/`

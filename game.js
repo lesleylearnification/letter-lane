@@ -1,327 +1,493 @@
-const rounds = [
-  { answer: "CAT", distractor: "HAT", picture: "🐱", label: "cat", cheer: "Meow-wow! You found CAT!" },
-  { answer: "DOG", distractor: "DIG", picture: "🐶", label: "dog", cheer: "Woof-hoo! D-O-G spells DOG!" },
-  { answer: "SUN", distractor: "RUN", picture: "☀️", label: "sun", cheer: "You made the SUN shine!" },
-  { answer: "PIG", distractor: "BIG", picture: "🐷", label: "pig", cheer: "Oink-tastic! You found PIG!" },
-  { answer: "HEN", distractor: "PEN", picture: "🐔", label: "hen", cheer: "Cluck-cluck hooray! HEN!" },
-  { answer: "CAR", distractor: "CAN", picture: "🚗", label: "car", cheer: "Beep-beep! You spelled CAR!" },
-  { answer: "LOG", distractor: "LEG", picture: "🪵", label: "log", cheer: "You rolled right into LOG!" },
-  { answer: "CUP", distractor: "PUP", picture: "🥤", label: "cup", cheer: "Sip-sip hooray! CUP!" },
-  { answer: "CAP", distractor: "MAP", picture: "🧢", label: "cap", cheer: "Hat's amazing! You found CAP!" },
-  { answer: "RAT", distractor: "BAT", picture: "🐀", label: "rat", cheer: "Squeak-squeak! R-A-T spells RAT!" }
-];
+(() => {
+  "use strict";
 
-const state = {
-  roundIndex: 0,
-  completed: 0,
-  activeLane: null,
-  selectedCount: 0,
-  locked: false,
-  badges: JSON.parse(localStorage.getItem("letterLaneBadges") || "[]")
-};
-
-const els = {
-  lanes: document.getElementById("lanes"),
-  promptWord: document.getElementById("promptWord"),
-  nounPicture: document.getElementById("nounPicture"),
-  characterSpeech: document.getElementById("characterSpeech"),
-  letterSlots: document.getElementById("letterSlots"),
-  feedbackText: document.getElementById("feedbackText"),
-  progressText: document.getElementById("progressText"),
-  progressFill: document.getElementById("progressFill"),
-  progressTrack: document.querySelector(".progress-track"),
-  flowerTrail: document.getElementById("flowerTrail"),
-  nextButton: document.getElementById("nextButton"),
-  hearWordButton: document.getElementById("hearWordButton"),
-  celebrationBits: document.getElementById("celebrationBits"),
-  inventoryButton: document.getElementById("inventoryButton"),
-  inventoryPanel: document.getElementById("inventoryPanel"),
-  closeInventoryButton: document.getElementById("closeInventoryButton"),
-  inventoryContents: document.getElementById("inventoryContents"),
-  badgeCount: document.getElementById("badgeCount"),
-  levelComplete: document.getElementById("levelComplete"),
-  collectBadgeButton: document.getElementById("collectBadgeButton"),
-  playAgainButton: document.getElementById("playAgainButton"),
-  badgeStatus: document.getElementById("badgeStatus"),
-  srStatus: document.getElementById("srStatus")
-};
-
-function shufflePair(a, b) {
-  return Math.random() > 0.5 ? [a, b] : [b, a];
-}
-
-function speak(text) {
-  if (!("speechSynthesis" in window)) return;
-  window.speechSynthesis.cancel();
-  const utterance = new SpeechSynthesisUtterance(text);
-  utterance.rate = 0.78;
-  utterance.pitch = 1.15;
-  window.speechSynthesis.speak(utterance);
-}
-
-function buildSlots(length) {
-  els.letterSlots.innerHTML = "";
-  for (let i = 0; i < length; i += 1) {
-    const slot = document.createElement("div");
-    slot.className = "letter-slot";
-    slot.textContent = "_";
-    els.letterSlots.appendChild(slot);
-  }
-}
-
-function buildProgress() {
-  els.flowerTrail.innerHTML = "";
-  rounds.forEach((_, index) => {
-    const marker = document.createElement("span");
-    marker.textContent = index < state.completed ? "🌼" : index === state.completed ? "🐾" : "·";
-    els.flowerTrail.appendChild(marker);
-  });
-  els.progressText.textContent = `${Math.min(state.completed + 1, 10)} of 10`;
-  els.progressFill.style.width = `${(state.completed / rounds.length) * 100}%`;
-  els.progressTrack.setAttribute("aria-valuenow", String(state.completed));
-}
-
-function createLane(word, laneNumber, theme) {
-  const lane = document.createElement("div");
-  lane.className = "lane";
-  lane.dataset.word = word;
-  lane.style.setProperty("--lane", theme.main);
-  lane.style.setProperty("--lane-dark", theme.dark);
-  lane.style.setProperty("--lane-soft", theme.soft);
-
-  const label = document.createElement("div");
-  label.className = "lane-label";
-  label.innerHTML = `Lane <span>${laneNumber}</span>`;
-
-  const row = document.createElement("div");
-  row.className = "letter-row";
-
-  [...word].forEach((letter, index) => {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = "letter-button";
-    button.textContent = letter;
-    button.setAttribute("aria-label", `Letter ${letter}, step ${index + 1} of ${word.length}, lane ${laneNumber}`);
-    button.setAttribute("aria-pressed", "false");
-    button.addEventListener("click", () => chooseLetter(lane, button, index));
-    row.appendChild(button);
-
-    if (index < word.length - 1) {
-      const arrow = document.createElement("span");
-      arrow.className = "lane-arrow";
-      arrow.setAttribute("aria-hidden", "true");
-      arrow.textContent = "→";
-      row.appendChild(arrow);
+  const rounds = [
+    {
+      word: "CAT",
+      distractor: "HAT",
+      name: "Clover the Cat",
+      image: "assets/images/cat.svg",
+      alt: "A cheerful orange cat sitting beside a cottage garden",
+      cheer: "You found me! C-A-T spells cat!",
+      retry: "That spells hat. I am the cat. Let’s try my lane!"
+    },
+    {
+      word: "DOG",
+      distractor: "DIG",
+      name: "Daisy the Dog",
+      image: "assets/images/dog.svg",
+      alt: "A friendly brown dog beside a little blue gate",
+      cheer: "Woof-hoo! D-O-G spells dog!",
+      retry: "That spells dig. Look for the word dog and try again!"
+    },
+    {
+      word: "SUN",
+      distractor: "RUN",
+      name: "Sunny the Sun",
+      image: "assets/images/sun.svg",
+      alt: "A smiling golden sun shining over the neighborhood",
+      cheer: "You made my day! S-U-N spells sun!",
+      retry: "That spells run. I shine in the sky. Try sun!"
+    },
+    {
+      word: "PIG",
+      distractor: "BIG",
+      name: "Poppy the Pig",
+      image: "assets/images/pig.svg",
+      alt: "A rosy pig wearing a tiny flower near a garden fence",
+      cheer: "Oink-tastic! P-I-G spells pig!",
+      retry: "That spells big. I am a pig. Give my lane another try!"
+    },
+    {
+      word: "HEN",
+      distractor: "PEN",
+      name: "Hattie the Hen",
+      image: "assets/images/hen.svg",
+      alt: "A happy red hen standing beside a small wooden coop",
+      cheer: "Cluck, cluck, hooray! H-E-N spells hen!",
+      retry: "That spells pen. I am the hen. Try again!"
+    },
+    {
+      word: "CAR",
+      distractor: "CAN",
+      name: "Cora the Car",
+      image: "assets/images/car.svg",
+      alt: "A cheerful little red car parked on a cozy village lane",
+      cheer: "Beep beep! C-A-R spells car!",
+      retry: "That spells can. I have wheels. Find car!"
+    },
+    {
+      word: "LOG",
+      distractor: "LEG",
+      name: "Mossy the Log",
+      image: "assets/images/log.svg",
+      alt: "A mossy woodland log with a friendly face and tiny mushrooms",
+      cheer: "You found the woodland word! L-O-G spells log!",
+      retry: "That spells leg. I am a log. Look again!"
+    },
+    {
+      word: "CUP",
+      distractor: "PUP",
+      name: "Coco the Cup",
+      image: "assets/images/cup.svg",
+      alt: "A smiling blue cup on a picnic table with flowers nearby",
+      cheer: "Sip, sip, hooray! C-U-P spells cup!",
+      retry: "That spells pup. I am the cup. Try my word!"
+    },
+    {
+      word: "CAP",
+      distractor: "MAP",
+      name: "Callie the Cap",
+      image: "assets/images/cap.svg",
+      alt: "A bright green cap resting on a cottage fence post",
+      cheer: "You topped it! C-A-P spells cap!",
+      retry: "That spells map. I am a cap. Try again!"
+    },
+    {
+      word: "RAT",
+      distractor: "BAT",
+      name: "Rory the Rat",
+      image: "assets/images/rat.svg",
+      alt: "A sweet gray rat holding a berry beside a tiny garden door",
+      cheer: "Squeak-tacular! R-A-T spells rat!",
+      retry: "That spells bat. I am the rat. Follow my lane!"
     }
-  });
+  ];
 
-  lane.append(label, row);
-  return lane;
-}
+  const BADGE_KEY = "letterLaneExplorerEarned";
 
-function renderRound() {
-  const round = rounds[state.roundIndex];
-  state.activeLane = null;
-  state.selectedCount = 0;
-  state.locked = false;
+  const elements = {
+    welcomeScreen: document.getElementById("welcome-screen"),
+    gameScreen: document.getElementById("game-screen"),
+    startButton: document.getElementById("start-button"),
+    progressText: document.getElementById("progress-text"),
+    progressTrack: document.getElementById("progress-track"),
+    promptText: document.getElementById("prompt-text"),
+    lanes: document.getElementById("lanes"),
+    wordSlots: document.getElementById("word-slots"),
+    neighborFrame: document.getElementById("neighbor-frame"),
+    neighborImage: document.getElementById("neighbor-image"),
+    neighborName: document.getElementById("neighbor-name"),
+    feedbackMessage: document.getElementById("feedback-message"),
+    hearWordButton: document.getElementById("hear-word-button"),
+    nextButton: document.getElementById("next-button"),
+    completionModal: document.getElementById("completion-modal"),
+    completionClose: document.getElementById("completion-close"),
+    playAgainButton: document.getElementById("play-again-button"),
+    viewBackpackButton: document.getElementById("view-backpack-button"),
+    badgeStatus: document.getElementById("badge-status"),
+    inventoryButton: document.getElementById("inventory-button"),
+    inventoryModal: document.getElementById("inventory-modal"),
+    inventoryClose: document.getElementById("inventory-close"),
+    inventoryContent: document.getElementById("inventory-content"),
+    badgeCount: document.getElementById("badge-count")
+  };
 
-  els.promptWord.textContent = `${round.label}?`;
-  els.nounPicture.textContent = round.picture;
-  els.nounPicture.setAttribute("aria-label", round.label);
-  els.characterSpeech.textContent = "Can you find my word?";
-  els.feedbackText.textContent = "Pick a lane!";
-  els.nextButton.hidden = true;
-  els.celebrationBits.innerHTML = "";
-  els.nounPicture.classList.remove("cheer", "wiggle");
+  let currentRoundIndex = 0;
+  let selectedLetters = [];
+  let activeLane = null;
+  let roundResolved = false;
+  let lastFocusedElement = null;
 
-  buildSlots(round.answer.length);
-  buildProgress();
-
-  const [first, second] = shufflePair(round.answer, round.distractor);
-  els.lanes.innerHTML = "";
-  els.lanes.append(
-    createLane(first, 1, { main: "#4f7d20", dark: "#2f5613", soft: "#dff0b5" }),
-    createLane(second, 2, { main: "#6540a4", dark: "#3f2475", soft: "#e9ddfb" })
-  );
-
-  els.srStatus.textContent = `Round ${state.roundIndex + 1}. Find the word ${round.answer}.`;
-}
-
-function chooseLetter(lane, button, index) {
-  if (state.locked) return;
-
-  const allButtons = [...lane.querySelectorAll(".letter-button")];
-
-  if (state.activeLane && state.activeLane !== lane) {
-    els.feedbackText.textContent = "Stay on one lane!";
-    els.characterSpeech.textContent = "Keep following the same path.";
-    lane.classList.add("wrong-lane");
-    setTimeout(() => lane.classList.remove("wrong-lane"), 500);
-    return;
-  }
-
-  if (index !== state.selectedCount) {
-    els.feedbackText.textContent = "Start on the left!";
-    els.characterSpeech.textContent = "Tap the next letter in the lane.";
-    return;
-  }
-
-  state.activeLane = lane;
-  state.selectedCount += 1;
-  button.setAttribute("aria-pressed", "true");
-  button.disabled = true;
-
-  const slots = [...els.letterSlots.children];
-  slots[index].textContent = button.textContent;
-  els.feedbackText.textContent = index < allButtons.length - 1 ? "Keep going!" : "Word complete!";
-
-  [...els.lanes.children].forEach(otherLane => {
-    if (otherLane !== lane) {
-      otherLane.querySelectorAll("button").forEach(otherButton => {
-        otherButton.disabled = true;
-      });
+  function hasBadge() {
+    try {
+      return localStorage.getItem(BADGE_KEY) === "true";
+    } catch (error) {
+      return false;
     }
-  });
-
-  if (state.selectedCount === allButtons.length) {
-    evaluateLane(lane.dataset.word, lane);
   }
-}
 
-function evaluateLane(word, lane) {
-  state.locked = true;
-  const round = rounds[state.roundIndex];
-  els.lanes.querySelectorAll("button").forEach(button => { button.disabled = true; });
-
-  if (word === round.answer) {
-    lane.classList.add("correct-lane");
-    els.feedbackText.textContent = "You found it!";
-    els.characterSpeech.textContent = round.cheer;
-    els.nounPicture.classList.add("cheer");
-    createCelebration();
-    speak(round.cheer);
-    state.completed += 1;
-    buildProgress();
-    els.nextButton.hidden = false;
-    els.nextButton.textContent = state.completed === rounds.length ? "See my badge!" : "Next friend";
-    els.nextButton.focus();
-    els.srStatus.textContent = `${round.answer} is correct. ${round.cheer}`;
-  } else {
-    lane.classList.add("wrong-lane");
-    els.feedbackText.textContent = "Almost! Look again.";
-    els.characterSpeech.textContent = `${word} is a real word, but it is not ${round.label}. Try the other lane!`;
-    els.nounPicture.classList.add("wiggle");
-    speak(`Good try. ${word} is not ${round.label}. Try the other lane.`);
-    els.srStatus.textContent = `${word} is not the matching word. Try the other lane.`;
-    setTimeout(renderRound, 1800);
+  function saveBadge() {
+    try {
+      localStorage.setItem(BADGE_KEY, "true");
+    } catch (error) {
+      // The game still works when browser storage is unavailable.
+    }
   }
-}
 
-function createCelebration() {
-  const bits = ["⭐", "✨", "🌼", "💛", "🎉", "🐾"];
-  for (let i = 0; i < 12; i += 1) {
-    const spark = document.createElement("span");
-    spark.className = "spark";
-    spark.textContent = bits[i % bits.length];
-    spark.style.left = `${40 + Math.random() * 20}%`;
-    spark.style.top = `${40 + Math.random() * 20}%`;
-    spark.style.setProperty("--dx", `${-120 + Math.random() * 240}px`);
-    spark.style.setProperty("--dy", `${-110 + Math.random() * 190}px`);
-    els.celebrationBits.appendChild(spark);
+  function updateInventoryButton() {
+    const count = hasBadge() ? 1 : 0;
+    elements.badgeCount.textContent = String(count);
+    elements.badgeCount.setAttribute("aria-label", `${count} badge${count === 1 ? "" : "s"}`);
   }
-}
 
-function nextRound() {
-  if (state.completed >= rounds.length) {
-    showLevelComplete();
-    return;
-  }
-  state.roundIndex += 1;
-  renderRound();
-}
+  function createProgressTrack() {
+    elements.progressTrack.replaceChildren();
 
-function showLevelComplete() {
-  els.levelComplete.hidden = false;
-  const alreadyEarned = state.badges.some(badge => badge.id === "cozy-neighborhood");
-  els.badgeStatus.textContent = alreadyEarned
-    ? "This badge is already safe in your backpack."
-    : "A new badge is ready for your backpack.";
-  els.collectBadgeButton.textContent = alreadyEarned ? "Badge collected!" : "Add badge to backpack";
-  els.collectBadgeButton.disabled = alreadyEarned;
-  els.collectBadgeButton.focus();
-  speak("Level complete! You earned the Letter Lane Explorer badge!");
-}
+    rounds.forEach((_, index) => {
+      const step = document.createElement("li");
+      step.className = "progress-step";
+      step.textContent = String(index + 1);
 
-function collectBadge() {
-  if (!state.badges.some(badge => badge.id === "cozy-neighborhood")) {
-    state.badges.push({
-      id: "cozy-neighborhood",
-      title: "Letter Lane Explorer",
-      description: "Completed the Cozy Neighborhood",
-      icon: "🏡"
+      if (index < currentRoundIndex) {
+        step.classList.add("complete");
+        step.textContent = "✓";
+        step.setAttribute("aria-label", `Friend ${index + 1} complete`);
+      } else if (index === currentRoundIndex) {
+        step.classList.add("current");
+        step.setAttribute("aria-current", "step");
+        step.setAttribute("aria-label", `Current friend ${index + 1}`);
+      } else {
+        step.setAttribute("aria-label", `Friend ${index + 1} not completed`);
+      }
+
+      elements.progressTrack.append(step);
     });
-    localStorage.setItem("letterLaneBadges", JSON.stringify(state.badges));
-  }
-  els.collectBadgeButton.textContent = "Badge collected!";
-  els.collectBadgeButton.disabled = true;
-  els.badgeStatus.textContent = "Your new badge is in your backpack!";
-  updateInventory();
-}
-
-function updateInventory() {
-  els.badgeCount.textContent = String(state.badges.length);
-  els.badgeCount.setAttribute("aria-label", `${state.badges.length} badges`);
-  els.inventoryContents.innerHTML = "";
-
-  if (state.badges.length === 0) {
-    els.inventoryContents.innerHTML = '<div class="empty-inventory">Your backpack is waiting for its first badge.</div>';
-    return;
   }
 
-  state.badges.forEach(badge => {
-    const card = document.createElement("div");
-    card.className = "badge-card";
-    card.innerHTML = `
-      <div class="badge-mini" aria-hidden="true">${badge.icon}</div>
-      <div><strong>${badge.title}</strong><br><span>${badge.description}</span></div>
+  function buildWordSlots(wordLength) {
+    elements.wordSlots.replaceChildren();
+
+    for (let index = 0; index < wordLength; index += 1) {
+      const slot = document.createElement("span");
+      slot.className = "word-slot";
+      slot.textContent = selectedLetters[index] || "";
+      slot.setAttribute(
+        "aria-label",
+        selectedLetters[index] ? `Letter ${index + 1}: ${selectedLetters[index]}` : `Letter ${index + 1} empty`
+      );
+      elements.wordSlots.append(slot);
+    }
+  }
+
+  function shuffledLaneWords(round) {
+    const entries = [
+      { word: round.word, correct: true },
+      { word: round.distractor, correct: false }
+    ];
+
+    return Math.random() < 0.5 ? entries : entries.reverse();
+  }
+
+  function createLane(entry, laneIndex) {
+    const lane = document.createElement("div");
+    lane.className = "lane";
+    lane.dataset.word = entry.word;
+    lane.dataset.correct = String(entry.correct);
+    lane.dataset.tone = laneIndex === 0 ? "green" : "purple";
+
+    const label = document.createElement("div");
+    label.className = "lane-label";
+    label.innerHTML = `Lane <span>${laneIndex + 1}</span>`;
+
+    const letterRow = document.createElement("div");
+    letterRow.className = "letter-row";
+
+    [...entry.word].forEach((letter, letterIndex) => {
+      const button = document.createElement("button");
+      button.className = "letter-button";
+      button.type = "button";
+      button.textContent = letter;
+      button.dataset.index = String(letterIndex);
+      button.setAttribute("aria-label", `Lane ${laneIndex + 1}, letter ${letterIndex + 1}, ${letter}`);
+      button.addEventListener("click", () => handleLetterClick(lane, button, letter, letterIndex));
+      letterRow.append(button);
+    });
+
+    const end = document.createElement("div");
+    end.className = "lane-end";
+    end.innerHTML = "<span aria-hidden=\"true\">➜</span>";
+
+    lane.append(label, letterRow, end);
+    return lane;
+  }
+
+  function renderRound() {
+    const round = rounds[currentRoundIndex];
+
+    selectedLetters = [];
+    activeLane = null;
+    roundResolved = false;
+
+    elements.progressText.textContent = `Friend ${currentRoundIndex + 1} of ${rounds.length}`;
+    createProgressTrack();
+
+    elements.promptText.textContent = `${round.word.toLowerCase()}?`;
+    elements.neighborImage.src = round.image;
+    elements.neighborImage.alt = round.alt;
+    elements.neighborName.textContent = round.name;
+    elements.feedbackMessage.textContent = "Can you find my word?";
+    elements.nextButton.hidden = true;
+    elements.neighborFrame.classList.remove("cheer", "encourage");
+
+    buildWordSlots(round.word.length);
+    elements.lanes.replaceChildren();
+
+    shuffledLaneWords(round).forEach((entry, index) => {
+      elements.lanes.append(createLane(entry, index));
+    });
+
+    const firstLetter = elements.lanes.querySelector(".letter-button");
+    if (firstLetter) {
+      firstLetter.focus();
+    }
+  }
+
+  function handleLetterClick(lane, button, letter, letterIndex) {
+    if (roundResolved) {
+      return;
+    }
+
+    if (activeLane && activeLane !== lane) {
+      elements.feedbackMessage.textContent = "Stay on one lane until you reach the picture.";
+      animateNeighbor("encourage");
+      return;
+    }
+
+    if (letterIndex !== selectedLetters.length) {
+      elements.feedbackMessage.textContent =
+        selectedLetters.length === 0 ? "Start with the first letter on the left." : "Tap the next letter.";
+      animateNeighbor("encourage");
+      return;
+    }
+
+    activeLane = lane;
+    selectedLetters.push(letter);
+    button.classList.add("selected");
+    button.disabled = true;
+    buildWordSlots(lane.dataset.word.length);
+
+    const allLanes = [...elements.lanes.querySelectorAll(".lane")];
+    allLanes.forEach((otherLane) => {
+      if (otherLane !== lane) {
+        otherLane.querySelectorAll(".letter-button").forEach((otherButton) => {
+          otherButton.disabled = true;
+        });
+      }
+    });
+
+    if (selectedLetters.length < lane.dataset.word.length) {
+      elements.feedbackMessage.textContent = "Great! Keep going toward the picture.";
+      const nextButton = lane.querySelector(`.letter-button[data-index="${selectedLetters.length}"]`);
+      if (nextButton) {
+        nextButton.focus();
+      }
+      return;
+    }
+
+    finishAttempt(lane);
+  }
+
+  function finishAttempt(lane) {
+    const round = rounds[currentRoundIndex];
+    const isCorrect = lane.dataset.correct === "true";
+
+    roundResolved = true;
+    elements.lanes.querySelectorAll(".letter-button").forEach((button) => {
+      button.disabled = true;
+    });
+
+    if (isCorrect) {
+      lane.classList.add("correct");
+      elements.feedbackMessage.textContent = round.cheer;
+      animateNeighbor("cheer");
+      speak(`${round.word.split("").join(" ")}. ${round.word.toLowerCase()}.`);
+      elements.nextButton.hidden = false;
+      elements.nextButton.focus();
+    } else {
+      lane.classList.add("wrong");
+      elements.feedbackMessage.textContent = round.retry;
+      animateNeighbor("encourage");
+      speak(round.retry);
+
+      window.setTimeout(() => {
+        resetCurrentRound();
+      }, 1800);
+    }
+  }
+
+  function resetCurrentRound() {
+    selectedLetters = [];
+    activeLane = null;
+    roundResolved = false;
+    elements.feedbackMessage.textContent = "Try the other lane. You can do it!";
+    buildWordSlots(rounds[currentRoundIndex].word.length);
+
+    elements.lanes.querySelectorAll(".lane").forEach((lane) => {
+      lane.classList.remove("wrong", "correct");
+      lane.querySelectorAll(".letter-button").forEach((button) => {
+        button.disabled = false;
+        button.classList.remove("selected");
+      });
+    });
+
+    const firstButton = elements.lanes.querySelector(".letter-button");
+    if (firstButton) {
+      firstButton.focus();
+    }
+  }
+
+  function animateNeighbor(className) {
+    elements.neighborFrame.classList.remove("cheer", "encourage");
+    void elements.neighborFrame.offsetWidth;
+    elements.neighborFrame.classList.add(className);
+  }
+
+  function speak(text) {
+    if (!("speechSynthesis" in window)) {
+      return;
+    }
+
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 0.78;
+    utterance.pitch = 1.08;
+    window.speechSynthesis.speak(utterance);
+  }
+
+  function goToNextRound() {
+    if (currentRoundIndex < rounds.length - 1) {
+      currentRoundIndex += 1;
+      renderRound();
+      return;
+    }
+
+    completeLevel();
+  }
+
+  function completeLevel() {
+    saveBadge();
+    updateInventoryButton();
+    elements.badgeStatus.textContent = hasBadge()
+      ? "Your Letter Lane Explorer badge is in your backpack!"
+      : "You earned the Letter Lane Explorer badge!";
+    openModal(elements.completionModal, elements.completionClose);
+    speak("Level complete! You helped every friend find their name!");
+  }
+
+  function startGame() {
+    currentRoundIndex = 0;
+    elements.welcomeScreen.hidden = true;
+    elements.gameScreen.hidden = false;
+    renderRound();
+  }
+
+  function playAgain() {
+    closeModal(elements.completionModal);
+    currentRoundIndex = 0;
+    renderRound();
+  }
+
+  function renderInventory() {
+    elements.inventoryContent.replaceChildren();
+
+    if (!hasBadge()) {
+      const empty = document.createElement("div");
+      empty.className = "inventory-empty";
+      empty.innerHTML = "<strong>Your backpack is ready!</strong><p>Complete all 10 neighbors to earn your first badge.</p>";
+      elements.inventoryContent.append(empty);
+      return;
+    }
+
+    const badge = document.createElement("div");
+    badge.className = "inventory-badge";
+    badge.innerHTML = `
+      <img src="assets/images/letter-lane-explorer.svg" alt="">
+      <div>
+        <strong>Letter Lane Explorer</strong>
+        <span>Completed the Cozy Neighborhood</span>
+      </div>
     `;
-    els.inventoryContents.appendChild(card);
-  });
-}
-
-function resetGame() {
-  state.roundIndex = 0;
-  state.completed = 0;
-  els.levelComplete.hidden = true;
-  renderRound();
-}
-
-function toggleInventory(forceOpen) {
-  const shouldOpen = typeof forceOpen === "boolean" ? forceOpen : els.inventoryPanel.hidden;
-  els.inventoryPanel.hidden = !shouldOpen;
-  els.inventoryButton.setAttribute("aria-expanded", String(shouldOpen));
-  if (shouldOpen) els.closeInventoryButton.focus();
-}
-
-els.nextButton.addEventListener("click", nextRound);
-els.hearWordButton.addEventListener("click", () => {
-  const round = rounds[state.roundIndex];
-  speak(round.answer.split("").join(". ") + `. ${round.answer}.`);
-});
-els.inventoryButton.addEventListener("click", () => toggleInventory());
-els.closeInventoryButton.addEventListener("click", () => {
-  toggleInventory(false);
-  els.inventoryButton.focus();
-});
-els.collectBadgeButton.addEventListener("click", collectBadge);
-els.playAgainButton.addEventListener("click", resetGame);
-
-document.addEventListener("keydown", event => {
-  if (event.key === "Escape" && !els.inventoryPanel.hidden) {
-    toggleInventory(false);
-    els.inventoryButton.focus();
+    elements.inventoryContent.append(badge);
   }
-});
 
-updateInventory();
-renderRound();
+  function openInventory() {
+    renderInventory();
+    openModal(elements.inventoryModal, elements.inventoryClose);
+  }
+
+  function openModal(modal, focusTarget) {
+    lastFocusedElement = document.activeElement;
+    modal.hidden = false;
+    document.body.style.overflow = "hidden";
+    window.setTimeout(() => focusTarget.focus(), 0);
+  }
+
+  function closeModal(modal) {
+    modal.hidden = true;
+    document.body.style.overflow = "";
+    if (lastFocusedElement instanceof HTMLElement) {
+      lastFocusedElement.focus();
+    }
+  }
+
+  function handleEscape(event) {
+    if (event.key !== "Escape") {
+      return;
+    }
+
+    if (!elements.inventoryModal.hidden) {
+      closeModal(elements.inventoryModal);
+    } else if (!elements.completionModal.hidden) {
+      closeModal(elements.completionModal);
+    }
+  }
+
+  elements.startButton.addEventListener("click", startGame);
+  elements.hearWordButton.addEventListener("click", () => {
+    const round = rounds[currentRoundIndex];
+    speak(`${round.word.split("").join(" ")}. ${round.word.toLowerCase()}.`);
+  });
+  elements.nextButton.addEventListener("click", goToNextRound);
+  elements.playAgainButton.addEventListener("click", playAgain);
+  elements.completionClose.addEventListener("click", () => closeModal(elements.completionModal));
+  elements.viewBackpackButton.addEventListener("click", () => {
+    closeModal(elements.completionModal);
+    openInventory();
+  });
+  elements.inventoryButton.addEventListener("click", openInventory);
+  elements.inventoryClose.addEventListener("click", () => closeModal(elements.inventoryModal));
+
+  document.querySelectorAll("[data-close-modal]").forEach((element) => {
+    element.addEventListener("click", () => closeModal(elements.completionModal));
+  });
+
+  document.querySelectorAll("[data-close-inventory]").forEach((element) => {
+    element.addEventListener("click", () => closeModal(elements.inventoryModal));
+  });
+
+  document.addEventListener("keydown", handleEscape);
+
+  updateInventoryButton();
+  createProgressTrack();
+})();

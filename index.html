@@ -1,122 +1,160 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Letter Lane is a cozy early-reading game where children follow letters to match words with pictures.">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Letter Lane is a cozy early-literacy game about following letters to friendly neighborhood nouns.">
   <title>Letter Lane</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <a class="skip-link" href="#game">Skip to game</a>
+  <a class="skip-link" href="#game-area">Skip to the game</a>
 
-  <main id="game" class="game-shell" aria-labelledby="game-title">
-    <header class="topbar">
+  <main class="app-shell">
+    <header class="topbar" aria-label="Game header">
       <div class="brand" aria-label="Letter Lane">
         <span class="brand-paw" aria-hidden="true">🐾</span>
-        <h1 id="game-title">Letter Lane</h1>
+        <span>Letter Lane</span>
       </div>
 
-      <button id="inventoryButton" class="inventory-button" type="button" aria-expanded="false" aria-controls="inventoryPanel">
+      <button id="inventory-button" class="inventory-button" type="button" aria-haspopup="dialog">
         <span aria-hidden="true">🎒</span>
-        <span>My Badges</span>
-        <span id="badgeCount" class="badge-count" aria-label="0 badges">0</span>
+        <span>My Backpack</span>
+        <span id="badge-count" class="badge-count" aria-label="0 badges">0</span>
       </button>
     </header>
 
-    <section class="progress-wrap" aria-labelledby="progressLabel">
+    <section class="progress-panel" aria-labelledby="progress-label">
       <div class="progress-copy">
-        <span id="progressLabel">Neighborhood progress</span>
-        <span id="progressText">1 of 10</span>
+        <span id="progress-label">Neighborhood trail</span>
+        <strong id="progress-text">Friend 1 of 10</strong>
       </div>
-      <div class="progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="10" aria-valuenow="0" aria-labelledby="progressLabel progressText">
-        <div id="progressFill" class="progress-fill"></div>
-      </div>
-      <div id="flowerTrail" class="flower-trail" aria-hidden="true"></div>
+      <ol id="progress-track" class="progress-track" aria-label="Level progress"></ol>
     </section>
 
-    <section class="instruction-strip" aria-label="How to play">
-      <div class="instruction-step">
-        <span class="step-number">1</span>
-        <span class="step-icon" aria-hidden="true">👆</span>
-        <span>Tap the first letter</span>
+    <section id="welcome-screen" class="screen welcome-screen" aria-labelledby="welcome-title">
+      <div class="welcome-copy">
+        <p class="eyebrow">A cozy reading adventure</p>
+        <h1 id="welcome-title">Help each neighbor find their name.</h1>
+        <p>Tap the letters from left to right. Choose the lane that matches the picture.</p>
+        <button id="start-button" class="primary-button large-button" type="button">
+          <span aria-hidden="true">▶</span>
+          Start the trail
+        </button>
       </div>
-      <div class="instruction-arrow" aria-hidden="true">→</div>
-      <div class="instruction-step">
-        <span class="step-number">2</span>
-        <span class="step-icon" aria-hidden="true">➡️</span>
-        <span>Follow one lane</span>
-      </div>
-      <div class="instruction-arrow" aria-hidden="true">→</div>
-      <div class="instruction-step">
-        <span class="step-number">3</span>
-        <span class="step-icon" aria-hidden="true">🎉</span>
-        <span>Reach the picture</span>
+
+      <div class="welcome-scene" aria-hidden="true">
+        <div class="storybook-house">🏡</div>
+        <div class="storybook-neighbors">
+          <span>🐱</span>
+          <span>🐶</span>
+          <span>🐷</span>
+        </div>
+        <div class="welcome-path"></div>
       </div>
     </section>
 
-    <section class="play-area" aria-live="polite">
-      <div class="lanes-panel">
-        <div class="prompt-card">
-          <button id="hearWordButton" class="sound-button" type="button" aria-label="Hear the word again">
-            <span aria-hidden="true">🔊</span>
+    <section id="game-screen" class="screen game-screen" hidden>
+      <div class="instruction-strip" aria-label="How to play">
+        <div class="instruction-step">
+          <span class="step-icon" aria-hidden="true">👆</span>
+          <span>Tap the first letter</span>
+        </div>
+        <div class="instruction-arrow" aria-hidden="true">➜</div>
+        <div class="instruction-step">
+          <span class="step-icon" aria-hidden="true">🔤</span>
+          <span>Follow one lane</span>
+        </div>
+        <div class="instruction-arrow" aria-hidden="true">➜</div>
+        <div class="instruction-step">
+          <span class="step-icon" aria-hidden="true">⭐</span>
+          <span>Reach the picture</span>
+        </div>
+      </div>
+
+      <div id="game-area" class="play-grid">
+        <section class="lane-area" aria-labelledby="prompt-text">
+          <div class="prompt-row">
+            <button id="hear-word-button" class="sound-button" type="button" aria-label="Hear the word">
+              <span aria-hidden="true">🔊</span>
+            </button>
+            <div>
+              <p class="prompt-kicker">Which lane spells...</p>
+              <h2 id="prompt-text">cat?</h2>
+            </div>
+          </div>
+
+          <div id="lanes" class="lanes" aria-label="Letter lanes"></div>
+
+          <div class="word-builder" aria-live="polite">
+            <span class="word-builder-label">Your word</span>
+            <div id="word-slots" class="word-slots" aria-label="Letters selected"></div>
+          </div>
+        </section>
+
+        <aside class="neighbor-area" aria-labelledby="neighbor-name">
+          <div id="neighbor-frame" class="neighbor-frame">
+            <img id="neighbor-image" src="" alt="">
+          </div>
+          <p id="neighbor-name" class="neighbor-name"></p>
+          <p id="feedback-message" class="feedback-message" aria-live="polite">
+            Can you find my word?
+          </p>
+          <button id="next-button" class="primary-button" type="button" hidden>
+            Meet the next friend
+            <span aria-hidden="true">➜</span>
           </button>
-          <div>
-            <p class="eyebrow">Which lane spells...</p>
-            <p id="promptWord" class="prompt-word">cat?</p>
-          </div>
-        </div>
-
-        <div id="lanes" class="lanes" aria-label="Choose a spelling lane"></div>
-
-        <div class="word-builder" aria-labelledby="builderLabel">
-          <div class="builder-heading">
-            <span id="builderLabel">Your word</span>
-            <span id="feedbackText" class="feedback-text">Pick a lane!</span>
-          </div>
-          <div id="letterSlots" class="letter-slots" aria-live="assertive"></div>
-        </div>
+        </aside>
       </div>
-
-      <aside class="picture-panel" aria-label="Picture to match">
-        <div id="pictureHalo" class="picture-halo">
-          <div id="nounPicture" class="noun-picture" role="img" aria-label="Cat">🐱</div>
-          <div id="celebrationBits" class="celebration-bits" aria-hidden="true"></div>
-        </div>
-        <div id="characterSpeech" class="speech-bubble">Can you find my word?</div>
-        <button id="nextButton" class="primary-button" type="button" hidden>Next friend</button>
-      </aside>
     </section>
 
-    <aside id="inventoryPanel" class="inventory-panel" aria-labelledby="inventoryTitle" hidden>
-      <div class="inventory-header">
-        <h2 id="inventoryTitle">My Badge Backpack</h2>
-        <button id="closeInventoryButton" class="icon-button" type="button" aria-label="Close badge inventory">✕</button>
-      </div>
-      <div id="inventoryContents" class="inventory-contents"></div>
-    </aside>
+    <footer class="footer-note">
+      <span aria-hidden="true">🌼</span>
+      Every solved word helps the neighborhood bloom.
+    </footer>
+  </main>
 
-    <section id="levelComplete" class="modal" role="dialog" aria-modal="true" aria-labelledby="completeTitle" hidden>
-      <div class="modal-card">
-        <div class="confetti" aria-hidden="true">🎉 ✨ 🌼 ⭐ 🎊</div>
-        <p class="eyebrow">Level complete!</p>
-        <h2 id="completeTitle">You helped every friend find their name!</h2>
-        <div class="earned-badge" aria-label="Letter Lane Explorer badge">
-          <div class="badge-medallion">🏡</div>
+  <div id="completion-modal" class="modal" hidden>
+    <div class="modal-backdrop" data-close-modal></div>
+    <section class="modal-card celebration-card" role="dialog" aria-modal="true" aria-labelledby="completion-title">
+      <button id="completion-close" class="modal-close" type="button" aria-label="Close level-complete message">×</button>
+      <div class="celebration-icons" aria-hidden="true">🎉 ✨ 🌼 ⭐ 🐾</div>
+      <p class="eyebrow">Level complete!</p>
+      <h2 id="completion-title">You helped every friend find their name!</h2>
+
+      <div class="earned-badge">
+        <img src="assets/images/letter-lane-explorer.svg" alt="">
+        <div>
           <strong>Letter Lane Explorer</strong>
           <span>Completed the Cozy Neighborhood</span>
         </div>
-        <p id="badgeStatus">A new badge is ready for your backpack.</p>
-        <div class="modal-actions">
-          <button id="collectBadgeButton" class="primary-button" type="button">Add badge to backpack</button>
-          <button id="playAgainButton" class="secondary-button" type="button">Play again</button>
-        </div>
+      </div>
+
+      <p id="badge-status">Your new badge is in your backpack!</p>
+
+      <div class="modal-actions">
+        <button id="view-backpack-button" class="secondary-button" type="button">
+          <span aria-hidden="true">🎒</span>
+          View backpack
+        </button>
+        <button id="play-again-button" class="primary-button" type="button">
+          <span aria-hidden="true">↻</span>
+          Play again
+        </button>
       </div>
     </section>
+  </div>
 
-    <div id="srStatus" class="sr-only" aria-live="polite"></div>
-  </main>
+  <div id="inventory-modal" class="modal" hidden>
+    <div class="modal-backdrop" data-close-inventory></div>
+    <section class="modal-card inventory-card" role="dialog" aria-modal="true" aria-labelledby="inventory-title">
+      <button id="inventory-close" class="modal-close" type="button" aria-label="Close backpack">×</button>
+      <p class="eyebrow">My Backpack</p>
+      <h2 id="inventory-title">Badge collection</h2>
+      <div id="inventory-content" class="inventory-content"></div>
+    </section>
+  </div>
 
-  <script src="game.js"></script>
+  <script src="game.js" defer></script>
 </body>
 </html>
