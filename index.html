@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Letter Lane is a cozy early-reading game where children follow letters to match words with pictures.">
+  <title>Letter Lane</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <a class="skip-link" href="#game">Skip to game</a>
+
+  <main id="game" class="game-shell" aria-labelledby="game-title">
+    <header class="topbar">
+      <div class="brand" aria-label="Letter Lane">
+        <span class="brand-paw" aria-hidden="true">🐾</span>
+        <h1 id="game-title">Letter Lane</h1>
+      </div>
+
+      <button id="inventoryButton" class="inventory-button" type="button" aria-expanded="false" aria-controls="inventoryPanel">
+        <span aria-hidden="true">🎒</span>
+        <span>My Badges</span>
+        <span id="badgeCount" class="badge-count" aria-label="0 badges">0</span>
+      </button>
+    </header>
+
+    <section class="progress-wrap" aria-labelledby="progressLabel">
+      <div class="progress-copy">
+        <span id="progressLabel">Neighborhood progress</span>
+        <span id="progressText">1 of 10</span>
+      </div>
+      <div class="progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="10" aria-valuenow="0" aria-labelledby="progressLabel progressText">
+        <div id="progressFill" class="progress-fill"></div>
+      </div>
+      <div id="flowerTrail" class="flower-trail" aria-hidden="true"></div>
+    </section>
+
+    <section class="instruction-strip" aria-label="How to play">
+      <div class="instruction-step">
+        <span class="step-number">1</span>
+        <span class="step-icon" aria-hidden="true">👆</span>
+        <span>Tap the first letter</span>
+      </div>
+      <div class="instruction-arrow" aria-hidden="true">→</div>
+      <div class="instruction-step">
+        <span class="step-number">2</span>
+        <span class="step-icon" aria-hidden="true">➡️</span>
+        <span>Follow one lane</span>
+      </div>
+      <div class="instruction-arrow" aria-hidden="true">→</div>
+      <div class="instruction-step">
+        <span class="step-number">3</span>
+        <span class="step-icon" aria-hidden="true">🎉</span>
+        <span>Reach the picture</span>
+      </div>
+    </section>
+
+    <section class="play-area" aria-live="polite">
+      <div class="lanes-panel">
+        <div class="prompt-card">
+          <button id="hearWordButton" class="sound-button" type="button" aria-label="Hear the word again">
+            <span aria-hidden="true">🔊</span>
+          </button>
+          <div>
+            <p class="eyebrow">Which lane spells...</p>
+            <p id="promptWord" class="prompt-word">cat?</p>
+          </div>
+        </div>
+
+        <div id="lanes" class="lanes" aria-label="Choose a spelling lane"></div>
+
+        <div class="word-builder" aria-labelledby="builderLabel">
+          <div class="builder-heading">
+            <span id="builderLabel">Your word</span>
+            <span id="feedbackText" class="feedback-text">Pick a lane!</span>
+          </div>
+          <div id="letterSlots" class="letter-slots" aria-live="assertive"></div>
+        </div>
+      </div>
+
+      <aside class="picture-panel" aria-label="Picture to match">
+        <div id="pictureHalo" class="picture-halo">
+          <div id="nounPicture" class="noun-picture" role="img" aria-label="Cat">🐱</div>
+          <div id="celebrationBits" class="celebration-bits" aria-hidden="true"></div>
+        </div>
+        <div id="characterSpeech" class="speech-bubble">Can you find my word?</div>
+        <button id="nextButton" class="primary-button" type="button" hidden>Next friend</button>
+      </aside>
+    </section>
+
+    <aside id="inventoryPanel" class="inventory-panel" aria-labelledby="inventoryTitle" hidden>
+      <div class="inventory-header">
+        <h2 id="inventoryTitle">My Badge Backpack</h2>
+        <button id="closeInventoryButton" class="icon-button" type="button" aria-label="Close badge inventory">✕</button>
+      </div>
+      <div id="inventoryContents" class="inventory-contents"></div>
+    </aside>
+
+    <section id="levelComplete" class="modal" role="dialog" aria-modal="true" aria-labelledby="completeTitle" hidden>
+      <div class="modal-card">
+        <div class="confetti" aria-hidden="true">🎉 ✨ 🌼 ⭐ 🎊</div>
+        <p class="eyebrow">Level complete!</p>
+        <h2 id="completeTitle">You helped every friend find their name!</h2>
+        <div class="earned-badge" aria-label="Letter Lane Explorer badge">
+          <div class="badge-medallion">🏡</div>
+          <strong>Letter Lane Explorer</strong>
+          <span>Completed the Cozy Neighborhood</span>
+        </div>
+        <p id="badgeStatus">A new badge is ready for your backpack.</p>
+        <div class="modal-actions">
+          <button id="collectBadgeButton" class="primary-button" type="button">Add badge to backpack</button>
+          <button id="playAgainButton" class="secondary-button" type="button">Play again</button>
+        </div>
+      </div>
+    </section>
+
+    <div id="srStatus" class="sr-only" aria-live="polite"></div>
+  </main>
+
+  <script src="game.js"></script>
+</body>
+</html>
